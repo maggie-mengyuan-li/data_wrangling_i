@@ -1,0 +1,95 @@
+---
+title: "Part 1: Data Import"
+output: html_document
+---
+
+# Best practices in data importing
+
+```{r}
+library(tidyverse)
+```
+
+## Note: Working directory is automatically set as the folder in which the Rmd file lies. We want to use relative paths as much as possible, working out of this working directory, rather than absolute paths (avoid setwd()!)
+
+```{r}
+getwd()
+```
+
+## Import data
+
+```{r}
+# use the relative path & shorthand
+litters_data = read_csv(file = "./data/data_import_examples/FAS_litters.csv")
+names(litters_data)
+litters_data = janitor::clean_names(litters_data)
+names(litters_data)
+```
+
+## Examine ze data
+
+```{r}
+litters_data
+tail(litters_data)
+skimr::skim(litters_data) # kind of an in depth summary of df
+```
+
+For read_csv or any read_*, arguments include:
+-col_names: if TRUE, pulls column names directly from csv file, if FALSE, column names are X1, X2, etc or you supply custom col names
+-na: string vector containing character expressions to take place of missing values
+-skip: number of rows to skip before reading data (could be super useful!)
+
+For parsing columns using read_*
+-col_types:  specify what kinds of column type you want for each column (character, integer, double, etc)
+
+```{r}
+litters_data = read_csv(file = "./data/data_import_examples/FAS_litters.csv",
+  col_types = cols(
+    Group = col_character(),
+    `Litter Number` = col_character(),
+    `GD0 weight` = col_double(),
+    `GD18 weight` = col_double(),
+    `GD of Birth` = col_integer(),
+    `Pups born alive` = col_integer(),
+    `Pups dead @ birth` = col_integer(),
+    `Pups survive` = col_integer()
+  )
+)
+tail(litters_data)
+
+# following code does the same thing as above but in shorthand
+litters_data = read_csv(file = "./data/data_import_examples/FAS_litters.csv",
+  col_types = "ccddiiii"
+)
+litters_data
+
+# note: if you specify a col type that doesn't make sense, the values in the column become NAs!!
+```
+
+## Other file examples, namely, excel files
+
+read_table can be used for non-csv plain text files eg. tab delimited files (.txt). readxl is a package that can be very useful for excel files (and you don't have to export the excel files to csv). read_excel function has mostly same args as read_csv, also "sheet" option for multiple sheet files, and "range" option for reading in specific data rectangle.
+
+```{r}
+library(readxl)
+mlb11_data = read_excel("data/data_import_examples/mlb11.xlsx", n_max = 20)
+head(mlb11_data, 5)
+```
+
+## Comparing base R and read_r
+
+```{r}
+pups_base = read.csv("./data/data_import_examples/FAS_pups.csv")
+pups_readr = read_csv("./data/data_import_examples/FAS_pups.csv")
+
+View(pups_base)
+View(pups_readr)
+
+pups_base
+pups_readr
+
+pups_base$S
+pups_readr$S
+
+# can call pups_readr$S for sex column but not for base R data frame. the column specifications for base R are also quite different than that of read_R
+```
+
