@@ -1,0 +1,95 @@
+---
+title: "data_manip"
+author: "Maggie Li (ml4424)"
+date: "9/22/2020"
+output: html_document
+---
+
+## load library(s)
+```{r}
+library(tidyverse)
+```
+
+## Read in datasets
+```{r}
+options(tibble.print_min = 3)
+
+litters_data = read_csv("./data/data_import_examples/FAS_litters.csv",
+  col_types = "ccddiiii")
+litters_data = janitor::clean_names(litters_data)
+
+pups_data = read_csv("./data/data_import_examples/FAS_pups.csv",
+  col_types = "ciiiii")
+pups_data = janitor::clean_names(pups_data)
+```
+
+## select function
+```{r}
+# only keep certain cols
+select(litters_data, group, litter_number, gd0_weight, pups_born_alive)
+
+# piping looks better tbh
+litters_data %>% select(group, litter_number, gd0_weight, pups_born_alive)
+
+# specify range of cols to keep
+litters_data %>% select(group:gd_of_birth)
+
+# to remove
+litters_data %>% select(-pups_survive)
+
+# can rename cols WHILE selecting (OMG!)
+litters_data %>% select(GROUP = group, LiTtEr_NuMbEr = litter_number)
+
+# using rename only w/o selecting
+rename(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number)
+
+# helpers for select(); kind of like filtering cols that have specific starts, ends and contains
+select(litters_data, starts_with("gd"))
+
+# everything() arg in select() function pretty much just moves columns around, the first ones being the other args, and keeps the rest of the cols in data table
+litters_data
+select(litters_data, litter_number, pups_survive, everything())
+
+# relocate() is a function that does the same thing as above
+relocate(litters_data, litter_number, pups_survive) 
+
+```
+
+## Filter function
+Pretty straightforward, you've done it before but check notes for add examples
+
+## Cmd --> Shift --> M does piping !
+
+## Mutate function
+This creates new columns based on existing ones
+
+```{r}
+litters_data %>% mutate(
+  wt_gain = gd18_weight - gd0_weight,
+  group = str_to_lower(group) #converts entries to all lower case
+)
+
+# create variable that subtracts 7 from PD pivot
+pups_data %>% mutate(
+  sub_7 = pd_pivot - 7,
+  sum_pd = pd_ears + pd_eyes + pd_pivot + pd_walk
+)
+```
+A few things in this example are worth noting:
+
+-Your new variables can be functions of old variables
+-New variables appear at the end of the dataset in the order that they are created
+-You can overwrite old variables
+-You can create a new variable and immediately refer to (or change) it
+
+
+## final learning assessment
+```{r}
+pups_data_final <- read_csv("./data/data_import_examples/FAS_pups.csv") %>%
+  janitor::clean_names() %>%
+  filter(sex == 1) %>% 
+  select(-pd_ears) %>% 
+  mutate(pd_7 = ifelse(pd_pivot >= 7, 1, 0)) #can also just be mutate(pd_7 = pd_pivot > 7), don't need ifelse
+
+```
+

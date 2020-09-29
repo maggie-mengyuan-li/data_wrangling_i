@@ -1,0 +1,78 @@
+---
+title: "tidy_data"
+author: "Maggie Li (ml4424)"
+date: "9/28/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+options(tibble.print_min = 5)
+```
+
+```{r pivot_longer}
+pulse_data = 
+  haven::read_sas("./data/data_import_examples/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names()
+
+pulse_data #four columns of bdi observations
+
+pulse_tidy_data = 
+  pivot_longer(
+    pulse_data, 
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    values_to = "bdi")
+
+pulse_tidy_data # not good practice to save intermediate datasets; moreso do everything in one go for readibility and not to clutter environment
+```
+
+```{r import tidy and transform PULSE data into usable format using all the powers of pivot_longer}
+pulse_data = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names() %>%
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", #column name that you want to spread
+    names_prefix = "bdi_score_", # specify you want to get rid of this prefix in all the column entries for visit
+    values_to = "bdi") %>% # specify values of each of the OG bdi score and visit combinations 
+  relocate(visit) %>%
+  mutate(
+    visit = replace(visit, visit == "bl", "00m"),
+    visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) %>%
+  arrange(id, visit)
+
+print(pulse_data, n = 12)
+```
+
+
+```{r pivot_wider from tidy to non-tidy}
+analysis_result = tibble(
+  group = c("treatment", "treatment", "placebo", "placebo"),
+  time = c("pre", "post", "pre", "post"),
+  mean = c(4, 8, 3.5, 4)
+)
+
+analysis_result
+
+pivot_wider(
+  analysis_result, 
+  names_from = "time", 
+  values_from = "mean")
+
+```
+
+```{r bind rows}
+fellowship_ring = 
+  readxl::read_excel("./data/data_import_examples/LotR_Words.xlsx", range = "B3:D6") %>%
+  mutate(movie = "fellowship_ring")
+
+two_towers = 
+  readxl::read_excel("./data/data_import_examples/LotR_Words.xlsx", range = "F3:H6") %>%
+  mutate(movie = "two_towers")
+
+return_king = 
+  readxl::read_excel("./data/data_import_examples/LotR_Words.xlsx", range = "J3:L6") %>%
+  mutate(movie = "return_king")
+```
+
